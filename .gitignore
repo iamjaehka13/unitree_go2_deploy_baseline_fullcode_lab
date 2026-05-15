@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Isaac Lab / training outputs
+logs/
+outputs/
+runs/
+videos/
+wandb/
+.neptune/
+
+# Local environments and Isaac Sim cache
+.venv/
+venv/
+_isaac_sim*/
+_repo/
+_build/
+.lastformat
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+
+# Large generated assets
+*.pt
+*.onnx
+*.usd
+*.usda
+*.usdc
+*.usdz
+
+# Keep README demo media tracked.
+!docs/media/*.mp4
+!docs/media/*.gif
