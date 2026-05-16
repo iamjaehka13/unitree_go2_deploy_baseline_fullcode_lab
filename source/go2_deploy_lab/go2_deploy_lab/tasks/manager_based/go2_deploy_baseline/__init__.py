@@ -4,7 +4,7 @@ from . import agents
 
 gym.register(
     id="Isaac-Velocity-Flat-Unitree-Go2-Deploy-Baseline-v0",
-    entry_point="isaaclab.envs:ManagerBasedRLEnv",
+    entry_point=f"{__name__}.deploy_env:Go2DeployManagerBasedRLEnv",
     disable_env_checker=True,
     kwargs={
         "env_cfg_entry_point": f"{__name__}.flat_env_cfg:Go2DeployFlatEnvCfg",
@@ -14,7 +14,7 @@ gym.register(
 
 gym.register(
     id="Isaac-Velocity-Flat-Unitree-Go2-Deploy-Baseline-Play-v0",
-    entry_point="isaaclab.envs:ManagerBasedRLEnv",
+    entry_point=f"{__name__}.deploy_env:Go2DeployManagerBasedRLEnv",
     disable_env_checker=True,
     kwargs={
         "env_cfg_entry_point": f"{__name__}.flat_env_cfg:Go2DeployFlatEnvCfg_PLAY",

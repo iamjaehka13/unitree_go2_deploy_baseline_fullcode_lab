@@ -106,7 +106,7 @@ except ImportError:
     tty = None
 
 
-DEFAULT_EXPERIMENT = "unitree_go2_deploy_baseline_lab_flat"
+DEFAULT_EXPERIMENT = "flat_go2_deploy"
 DEFAULT_RUN = None
 DEFAULT_CHECKPOINT = -1
 DEFAULT_POLICY = REPO_ROOT / "logs" / "rsl_rl" / DEFAULT_EXPERIMENT / "exported" / "policy.pt"
