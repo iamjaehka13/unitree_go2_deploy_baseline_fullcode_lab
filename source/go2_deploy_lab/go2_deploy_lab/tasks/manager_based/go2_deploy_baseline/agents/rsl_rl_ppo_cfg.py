@@ -13,7 +13,7 @@ class Go2DeployFlatPPORunnerCfg(UnitreeGo2FlatPPORunnerCfg):
         self.seed = 1
         self.clip_actions = 100.0
         self.obs_groups = {"policy": ["policy"], "critic": ["critic"]}
-        self.max_iterations = 1500
+        self.max_iterations = 5000
         self.save_interval = 50
         self.experiment_name = "flat_go2_deploy"
         self.policy.actor_hidden_dims = [512, 256, 128]
