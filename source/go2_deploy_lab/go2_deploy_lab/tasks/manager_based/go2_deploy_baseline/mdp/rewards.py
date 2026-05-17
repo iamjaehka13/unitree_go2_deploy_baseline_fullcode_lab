@@ -85,6 +85,17 @@ def feet_slide(
     return torch.sum(foot_horiz_speed * contact, dim=1)
 
 
+def undesired_contacts_current(
+    env: ManagerBasedRLEnv,
+    threshold: float,
+    sensor_cfg: SceneEntityCfg,
+) -> torch.Tensor:
+    """Count undesired current-step contacts, matching legged_gym's collision reward."""
+    contact_sensor: ContactSensor = env.scene.sensors[sensor_cfg.name]
+    net_forces = contact_sensor.data.net_forces_w[:, sensor_cfg.body_ids]
+    return torch.sum(torch.linalg.norm(net_forces, dim=-1) > threshold, dim=1)
+
+
 def foot_gait(
     env: ManagerBasedRLEnv,
     command_name: str = "base_velocity",

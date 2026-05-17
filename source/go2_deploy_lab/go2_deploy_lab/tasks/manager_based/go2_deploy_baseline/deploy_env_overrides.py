@@ -288,7 +288,7 @@ def _apply_reward_cfg(env_cfg):
     )
     env_cfg.rewards.ang_vel_xy = RewTerm(func=base_mdp.ang_vel_xy_l2, weight=-0.05)
     env_cfg.rewards.collision = RewTerm(
-        func=base_mdp.undesired_contacts,
+        func=go2_mdp.undesired_contacts_current,
         weight=-1.0,
         params={
             "sensor_cfg": SceneEntityCfg("contact_forces", body_names=[".*_hip", ".*_thigh", ".*_calf"]),
@@ -356,8 +356,14 @@ def _apply_reward_cfg(env_cfg):
 
 def _apply_termination_cfg(env_cfg):
     contact_bodies = ["base", ".*_hip", ".*_thigh", ".*_calf"]
-    env_cfg.terminations.base_contact.params["sensor_cfg"].body_names = contact_bodies
-    env_cfg.terminations.base_contact.params["threshold"] = 1.0
+    env_cfg.terminations.time_out = DoneTerm(func=go2_mdp.time_out_after_max_length, time_out=True)
+    env_cfg.terminations.base_contact = DoneTerm(
+        func=go2_mdp.illegal_contact_current,
+        params={
+            "sensor_cfg": SceneEntityCfg("contact_forces", body_names=contact_bodies),
+            "threshold": 1.0,
+        },
+    )
     env_cfg.terminations.bad_roll_pitch = DoneTerm(
         func=go2_mdp.bad_roll_pitch,
         params={"roll_limit": 0.8, "pitch_limit": 1.0},
