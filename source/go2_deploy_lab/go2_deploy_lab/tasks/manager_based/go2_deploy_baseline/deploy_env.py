@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 import torch
 from collections.abc import Sequence
 
@@ -152,17 +153,19 @@ class Go2DeployManagerBasedRLEnv(ManagerBasedRLEnv):
         if "interval" in self.event_manager.available_modes:
             self.event_manager.apply(mode="interval", dt=self.step_dt)
 
-        self.obs_buf = self.observation_manager.compute(update_history=True)
         self._commit_applied_actions()
+        self.obs_buf = self.observation_manager.compute(update_history=True)
 
         return self.obs_buf, self.reward_buf, self.reset_terminated, self.reset_time_outs, self.extras
 
     def _apply_deploy_pushes(self):
         if not getattr(self.cfg, "deploy_push_robots", True):
             return
-        interval = max(1, int(round(float(self.cfg.deploy_push_interval_s) / self.step_dt)))
+        interval = max(1, int(math.ceil(float(self.cfg.deploy_push_interval_s) / self.step_dt)))
         env_ids = torch.arange(self.num_envs, device=self.device)
-        push_env_ids = env_ids[self.episode_length_buf[env_ids] % interval == 0]
+        episode_lengths = self.episode_length_buf[env_ids]
+        push_mask = (episode_lengths > 0) & (episode_lengths % interval == 0)
+        push_env_ids = env_ids[push_mask]
         if len(push_env_ids) == 0:
             return
         max_vel = float(self.cfg.deploy_max_push_vel_xy)

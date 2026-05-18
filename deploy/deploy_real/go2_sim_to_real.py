@@ -8,6 +8,7 @@ import sys
 import threading
 import time
 import os
+import re
 from pathlib import Path
 from typing import Callable, Sequence
 
@@ -109,7 +110,7 @@ except ImportError:
 DEFAULT_EXPERIMENT = "flat_go2_deploy"
 DEFAULT_RUN = None
 DEFAULT_CHECKPOINT = -1
-DEFAULT_POLICY = REPO_ROOT / "logs" / "rsl_rl" / DEFAULT_EXPERIMENT / "exported" / "policy.pt"
+MODEL_CHECKPOINT_RE = re.compile(r"^model_(\d+)\.pt$")
 
 POS_STOP_F = 2.146e9
 VEL_STOP_F = 16000.0
@@ -485,7 +486,7 @@ class Go2DeploySimToReal:
         self.last_action = np.zeros(self.num_actions, dtype=np.float32)
         self.action_history = [
             np.zeros(self.num_actions, dtype=np.float32)
-            for _ in range(max(1, int(args.action_delay_steps) + 1))
+            for _ in range(max(0, int(args.action_delay_steps)))
         ]
 
         self._command_lock = threading.Lock()
@@ -795,7 +796,7 @@ class Go2DeploySimToReal:
             np.linalg.norm(command[:2]) >= self.args.phase_command_threshold
             or abs(command[2]) >= self.args.phase_command_threshold
         )
-        if self.args.stand_phase_lock and not command_active:
+        if not command_active:
             sin_phase = 0.0
             cos_phase = 1.0
         obs[45] = sin_phase
@@ -804,8 +805,11 @@ class Go2DeploySimToReal:
 
     def _publish_policy_action(self, raw_action: np.ndarray) -> np.ndarray:
         action = np.clip(raw_action.astype(np.float32), -self.args.clip_actions, self.args.clip_actions)
-        self.action_history.append(action.copy())
-        applied_action = self.action_history.pop(0).astype(np.float32, copy=False)
+        if self.action_history:
+            self.action_history.append(action.copy())
+            applied_action = self.action_history.pop(0).astype(np.float32, copy=False)
+        else:
+            applied_action = action
 
         target_pos_policy = self.default_joint_pos + applied_action * self.args.action_scale
         target_pos_policy = np.clip(target_pos_policy, self.args.q_min, self.args.q_max)
@@ -821,7 +825,7 @@ class Go2DeploySimToReal:
 
         self.low_cmd.crc = self.crc.Crc(self.low_cmd)
         self.lowcmd_publisher.Write(self.low_cmd)
-        self.last_action = action
+        self.last_action = applied_action.copy()
         return applied_action
 
     def run_policy_loop(self, keyboard: KeyboardTeleop | None) -> None:
@@ -897,6 +901,17 @@ def _get_latest_exported_policy(experiment_name: str) -> Path | None:
     return candidates[0].resolve() if candidates else None
 
 
+def _get_latest_run_checkpoint(run_path: Path) -> Path | None:
+    candidates: list[tuple[int, Path]] = []
+    for path in run_path.glob("model_*.pt"):
+        match = MODEL_CHECKPOINT_RE.fullmatch(path.name)
+        if match is not None:
+            candidates.append((int(match.group(1)), path))
+    if not candidates:
+        return None
+    return max(candidates, key=lambda item: item[0])[1].resolve()
+
+
 def resolve_policy_path(args: argparse.Namespace) -> Path:
     if args.policy is not None:
         return Path(args.policy).expanduser().resolve()
@@ -904,12 +919,20 @@ def resolve_policy_path(args: argparse.Namespace) -> Path:
         run_path = Path(args.load_run).expanduser()
         if not run_path.is_absolute():
             run_path = REPO_ROOT / "logs" / "rsl_rl" / args.experiment_name / run_path
+        if int(args.checkpoint) < 0:
+            latest_checkpoint = _get_latest_run_checkpoint(run_path)
+            if latest_checkpoint is None:
+                raise FileNotFoundError(f"No model_<number>.pt checkpoints found in {run_path}")
+            return latest_checkpoint
         checkpoint_name = f"model_{int(args.checkpoint)}.pt"
         return (run_path / checkpoint_name).resolve()
     latest_policy = _get_latest_exported_policy(args.experiment_name)
     if latest_policy is not None:
         return latest_policy
-    return DEFAULT_POLICY.resolve()
+    raise FileNotFoundError(
+        f"No exported policy.pt found under logs/rsl_rl/{args.experiment_name}. "
+        "Pass --policy explicitly or run scripts/rsl_rl/play.py to export a checkpoint."
+    )
 
 
 def build_argparser() -> argparse.ArgumentParser:
@@ -926,19 +949,6 @@ def build_argparser() -> argparse.ArgumentParser:
 
     parser.add_argument("--dt", type=float, default=0.02)
     parser.add_argument("--gait-period", type=float, default=0.6)
-    parser.set_defaults(stand_phase_lock=True)
-    parser.add_argument(
-        "--stand-phase-lock",
-        dest="stand_phase_lock",
-        action="store_true",
-        help="freeze gait phase observation at zero command (default: enabled)",
-    )
-    parser.add_argument(
-        "--no-stand-phase-lock",
-        dest="stand_phase_lock",
-        action="store_false",
-        help="disable stand phase lock for ablation/debugging",
-    )
     parser.add_argument("--phase-command-threshold", type=float, default=0.1)
     parser.add_argument("--kp", type=float, default=20.0)
     parser.add_argument("--kd", type=float, default=0.5)

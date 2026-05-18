@@ -59,8 +59,9 @@ class randomize_deploy_friction(ManagerTermBase):
                 friction_range[0], friction_range[1], (len(update_env_ids), 1), device=env.device
             )
 
+        env._deploy_friction_coeffs_cur[update_env_ids] = coeffs
+
         if not force:
-            env._deploy_friction_coeffs_cur[update_env_ids] = coeffs
             env._deploy_global_dr_counter[update_env_ids] = 0
             env._deploy_global_dr_initialized[update_env_ids] = True
 

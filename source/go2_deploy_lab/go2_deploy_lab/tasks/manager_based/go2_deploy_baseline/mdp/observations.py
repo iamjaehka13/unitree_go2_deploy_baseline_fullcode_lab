@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 
 
 def previous_action(env: ManagerBasedRLEnv) -> torch.Tensor:
-    """Return the previous raw policy action, matching the deploy observation contract."""
+    """Return the previous action applied to the PD target."""
     return applied_action(env)
 
 
@@ -60,7 +60,7 @@ def deploy_actor_observation(
     gait_period: float = 0.6,
     command_threshold: float = 0.1,
     stand_phase_lock: bool = True,
-    add_noise: bool = False,
+    add_deploy_noise: bool = False,
     asset_cfg: SceneEntityCfg = SceneEntityCfg("robot"),
 ) -> torch.Tensor:
     """Return the exact 47-dim gym deploy actor observation."""
@@ -86,7 +86,7 @@ def deploy_actor_observation(
         dim=-1,
     )
 
-    if add_noise:
+    if add_deploy_noise:
         obs_noise_level = float(getattr(env, "_deploy_obs_noise_level_cur", 0.0))
         if obs_noise_level > 0.0:
             obs = obs + (2.0 * torch.rand_like(obs) - 1.0) * _deploy_noise_scale_vec(obs, env) * obs_noise_level

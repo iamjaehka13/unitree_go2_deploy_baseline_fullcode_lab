@@ -20,7 +20,9 @@ class Go2DeployFlatEnvCfg_PLAY(Go2DeployFlatEnvCfg):
         self.scene.num_envs = 50
         self.scene.env_spacing = 2.5
         self.observations.policy.enable_corruption = False
-        self.observations.policy.actor.params["add_noise"] = False
+        self.observations.policy.actor.params["add_deploy_noise"] = False
         self.deploy_push_robots = False
+        self.events.physics_material = None
+        self.events.deploy_friction = None
         self.events.base_external_force_torque = None
         self.events.push_robot = None

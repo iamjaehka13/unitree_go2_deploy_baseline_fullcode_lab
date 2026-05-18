@@ -44,12 +44,13 @@ class DeployPolicyObsCfg(ObsGroup):
             "gait_period": 0.6,
             "command_threshold": 0.1,
             "stand_phase_lock": True,
-            "add_noise": True,
+            "add_deploy_noise": True,
             "asset_cfg": SceneEntityCfg("robot", joint_names=POLICY_JOINT_NAMES, preserve_order=True),
         },
     )
 
     def __post_init__(self):
+        # Generic Isaac Lab corruption stays off; deploy noise is applied inside the observation term.
         self.enable_corruption = False
         self.concatenate_terms = True
 
@@ -67,7 +68,7 @@ class DeployCriticObsCfg(ObsGroup):
             "gait_period": 0.6,
             "command_threshold": 0.1,
             "stand_phase_lock": True,
-            "add_noise": False,
+            "add_deploy_noise": False,
             "asset_cfg": SceneEntityCfg("robot", joint_names=POLICY_JOINT_NAMES, preserve_order=True),
         },
     )
@@ -183,6 +184,8 @@ def _apply_observation_cfg(env_cfg):
 
 
 def _apply_command_cfg(env_cfg):
+    # The curriculum's hard range is intentionally wider than the real deploy
+    # runner's conservative default command limits.
     env_cfg.commands.base_velocity = go2_mdp.DeployVelocityCommandCfg(
         asset_name="robot",
         resampling_time_range=(3.0, 8.0),
@@ -253,6 +256,7 @@ def _apply_event_cfg(env_cfg):
         mode="reset",
         params={**friction_params, "force": False, "use_buckets": False},
     )
+    # Keep the Lab baseline inside its training distribution: no base-mass DR.
     env_cfg.events.add_base_mass = None
     env_cfg.events.base_com = None
     env_cfg.events.push_robot = None
