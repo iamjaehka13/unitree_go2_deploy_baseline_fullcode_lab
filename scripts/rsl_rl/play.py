@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
-"""Script to play a checkpoint if an RL agent from RSL-RL."""
+"""Script to play/export a checkpoint with an RSL-RL agent."""
 
 """Launch Isaac Sim Simulator first."""
 
@@ -16,8 +16,8 @@ from isaaclab.app import AppLauncher
 import cli_args  # isort: skip
 
 # add argparse arguments
-parser = argparse.ArgumentParser(description="Train an RL agent with RSL-RL.")
-parser.add_argument("--video", action="store_true", default=False, help="Record videos during training.")
+parser = argparse.ArgumentParser(description="Play/export an RL agent checkpoint with RSL-RL.")
+parser.add_argument("--video", action="store_true", default=False, help="Record videos during play.")
 parser.add_argument("--video_length", type=int, default=200, help="Length of the recorded video (in steps).")
 parser.add_argument(
     "--disable_fabric", action="store_true", default=False, help="Disable fabric and use USD I/O operations."
@@ -130,7 +130,7 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
             "video_length": args_cli.video_length,
             "disable_logger": True,
         }
-        print("[INFO] Recording videos during training.")
+        print("[INFO] Recording videos during play.")
         print_dict(video_kwargs, nesting=4)
         env = gym.wrappers.RecordVideo(env, **video_kwargs)
 

@@ -44,12 +44,13 @@ class DeployPolicyObsCfg(ObsGroup):
             "gait_period": 0.6,
             "command_threshold": 0.1,
             "stand_phase_lock": True,
-            "add_noise": True,
+            "add_deploy_noise": True,
             "asset_cfg": SceneEntityCfg("robot", joint_names=POLICY_JOINT_NAMES, preserve_order=True),
         },
     )
 
     def __post_init__(self):
+        # Generic Isaac Lab corruption stays off; deploy noise is applied inside the observation term.
         self.enable_corruption = False
         self.concatenate_terms = True
 
@@ -67,7 +68,7 @@ class DeployCriticObsCfg(ObsGroup):
             "gait_period": 0.6,
             "command_threshold": 0.1,
             "stand_phase_lock": True,
-            "add_noise": False,
+            "add_deploy_noise": False,
             "asset_cfg": SceneEntityCfg("robot", joint_names=POLICY_JOINT_NAMES, preserve_order=True),
         },
     )

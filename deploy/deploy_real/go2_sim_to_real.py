@@ -110,7 +110,6 @@ except ImportError:
 DEFAULT_EXPERIMENT = "flat_go2_deploy"
 DEFAULT_RUN = None
 DEFAULT_CHECKPOINT = -1
-DEFAULT_POLICY = REPO_ROOT / "logs" / "rsl_rl" / DEFAULT_EXPERIMENT / "exported" / "policy.pt"
 MODEL_CHECKPOINT_RE = re.compile(r"^model_(\d+)\.pt$")
 
 POS_STOP_F = 2.146e9
@@ -930,7 +929,10 @@ def resolve_policy_path(args: argparse.Namespace) -> Path:
     latest_policy = _get_latest_exported_policy(args.experiment_name)
     if latest_policy is not None:
         return latest_policy
-    return DEFAULT_POLICY.resolve()
+    raise FileNotFoundError(
+        f"No exported policy.pt found under logs/rsl_rl/{args.experiment_name}. "
+        "Pass --policy explicitly or run scripts/rsl_rl/play.py to export a checkpoint."
+    )
 
 
 def build_argparser() -> argparse.ArgumentParser:
