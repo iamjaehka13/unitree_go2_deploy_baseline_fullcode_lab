@@ -152,8 +152,8 @@ class Go2DeployManagerBasedRLEnv(ManagerBasedRLEnv):
         if "interval" in self.event_manager.available_modes:
             self.event_manager.apply(mode="interval", dt=self.step_dt)
 
-        self.obs_buf = self.observation_manager.compute(update_history=True)
         self._commit_applied_actions()
+        self.obs_buf = self.observation_manager.compute(update_history=True)
 
         return self.obs_buf, self.reward_buf, self.reset_terminated, self.reset_time_outs, self.extras
 
