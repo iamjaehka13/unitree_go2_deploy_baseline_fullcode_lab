@@ -82,6 +82,10 @@ The Isaac Lab play script exports TorchScript and ONNX policies under the checkp
 
 ## Real Deploy
 
+The training curriculum can sample a wider hard command range for robustness (`x: [-1.0, 2.0]`,
+`y: [-1.0, 1.0]`). The real deploy runner keeps conservative default command limits
+(`x: [-0.5, 1.0]`, `y: [-0.5, 0.5]`, `yaw: [-1.0, 1.0]`) for physical safety.
+
 Pass the exported TorchScript policy explicitly:
 
 ```bash
